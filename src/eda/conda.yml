@@ -13,4 +13,4 @@ dependencies:
   - pip:
       - mlflow==2.8.1
       - wandb==0.16.0
-      - ydata-profiling==4.16.1
+      - ydata-profiling==4.6.3
