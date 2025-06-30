@@ -14,3 +14,4 @@ dependencies:
       - mlflow==2.8.1
       - wandb==0.16.0
       - ydata-profiling==4.6.3
+      - ipywidgets==8.1.1
