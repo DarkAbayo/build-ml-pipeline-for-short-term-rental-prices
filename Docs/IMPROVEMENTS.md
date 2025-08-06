@@ -10,7 +10,15 @@ Ein neuer Ordner `Docs/data_splitting/` wurde erstellt mit:
 - **Explanations.md**: Detaillierte Erklärungen zu Konzepten wie stratifizierte Aufteilung und Reproduzierbarkeit
 - **CheatSheet.md**: Kurze Übersicht für schnelle Referenz
 
-### 2. Basics Dokumentation
+### 2. Train Random Forest Dokumentation
+
+Ein neuer Ordner `Docs/train_random_forest/` wurde erstellt mit:
+
+- **API.md**: Technische Schnittstellenbeschreibung für die train_random_forest Komponente
+- **Explanations.md**: Detaillierte Erklärungen zu Feature Engineering, Random Forest und Modelltraining
+- **CheatSheet.md**: Kurze Übersicht für schnelle Referenz
+
+### 3. Basics Dokumentation
 
 Ein neuer Ordner `Docs/basics/` wurde erstellt für Python-Anfänger mit:
 
@@ -48,6 +56,11 @@ Alle bestehenden Dokumentationen folgen bereits einem guten Muster, aber könnte
 - Custom Test-Fixtures
 - Integration mit CI/CD
 
+#### Für `Docs/train_random_forest/`:
+- Hyperparameter-Optimierung Strategien
+- Feature Engineering Best Practices
+- Modellinterpretation und Explainability
+
 #### Für `Docs/eda/`:
 - Erweiterte Visualisierungstechniken
 - Statistische Tests
@@ -72,6 +85,10 @@ Docs/
 │   ├── CheatSheet.md
 │   └── Explanations.md
 ├── data_splitting/           # NEU: Data Splitting
+│   ├── API.md
+│   ├── CheatSheet.md
+│   └── Explanations.md
+├── train_random_forest/      # NEU: Train Random Forest
 │   ├── API.md
 │   ├── CheatSheet.md
 │   └── Explanations.md
