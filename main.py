@@ -1,3 +1,27 @@
+#!/usr/bin/env python
+"""
+Main pipeline orchestration module for NYC Airbnb rental price prediction.
+
+This module serves as the central orchestrator for the complete ML pipeline,
+coordinating all pipeline steps from data ingestion to model training and testing.
+It uses Hydra for configuration management and MLflow for step execution.
+
+Pipeline Steps:
+1. download: Download raw data from W&B
+2. basic_cleaning: Clean and preprocess the data
+3. data_check: Validate data quality and consistency
+4. data_split: Split data into train/validation/test sets
+5. train_random_forest: Train Random Forest model with hyperparameter optimization
+6. test_regression_model: Test the production model against test data
+
+Configuration:
+- Uses Hydra configuration management with config.yaml
+- Supports both local and remote component execution
+- Configurable via command line parameters and Hydra overrides
+
+Author: Niedermeier Patrick
+Date: 2025-09-06
+"""
 import json
 
 import mlflow
@@ -23,6 +47,44 @@ _steps = [
 # This automatically reads in the configuration
 @hydra.main(config_name='config')
 def go(config: DictConfig):
+    """
+    Execute the complete ML pipeline for NYC Airbnb rental price prediction.
+    
+    This function orchestrates the entire ML pipeline by executing the specified
+    steps in sequence. It uses MLflow to run individual pipeline components
+    and manages the flow of artifacts between steps.
+    
+    Pipeline Steps Executed:
+    1. download: Downloads raw data from W&B using the specified sample
+    2. basic_cleaning: Cleans data, removes outliers, applies geographic filters
+    3. data_check: Validates data quality using comprehensive tests
+    4. data_split: Splits data into train/validation/test sets
+    5. train_random_forest: Trains Random Forest model with specified hyperparameters
+    6. test_regression_model: Tests the production model (requires manual "prod" tag)
+    
+    Args:
+        config (DictConfig): Hydra configuration object containing:
+            - main: Pipeline configuration (project_name, experiment_name, steps)
+            - etl: Data processing parameters (sample, price thresholds)
+            - data_check: Data validation parameters (KL threshold)
+            - modeling: Model training parameters (test_size, random_seed, hyperparameters)
+    
+    Environment Variables Set:
+        WANDB_PROJECT: Set to config["main"]["project_name"]
+        WANDB_RUN_GROUP: Set to config["main"]["experiment_name"]
+    
+    Returns:
+        None: Pipeline execution results are logged to W&B and MLflow
+    
+    Raises:
+        Exception: If any pipeline step fails during execution
+        
+    Example:
+        The pipeline can be run with different configurations:
+        - Full pipeline: mlflow run . -P steps=all
+        - Specific steps: mlflow run . -P steps=train_random_forest
+        - With overrides: mlflow run . -P hydra_options="etl.sample='sample2.csv'"
+    """
 
     # Setup the wandb experiment. All runs will be grouped under this name
     os.environ["WANDB_PROJECT"] = config["main"]["project_name"]

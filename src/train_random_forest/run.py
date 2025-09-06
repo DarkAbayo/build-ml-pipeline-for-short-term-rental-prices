@@ -1,6 +1,22 @@
 #!/usr/bin/env python
 """
-This script trains a Random Forest
+Random Forest training module for NYC Airbnb rental price prediction pipeline.
+
+This module implements the complete Random Forest training pipeline including
+feature engineering, preprocessing, model training, and evaluation. It creates
+a comprehensive ML pipeline with categorical encoding, text processing, and
+geographic feature handling.
+
+Key Features:
+- Comprehensive feature engineering with TF-IDF text processing
+- Categorical encoding for room types and neighborhoods
+- Geographic coordinate processing and imputation
+- Date feature engineering (days since last review)
+- Random Forest model training with configurable hyperparameters
+- Feature importance visualization and logging
+
+Author: Niedermeier Patrick
+Date: 2025-09-06
 """
 import argparse
 import logging
@@ -39,6 +55,50 @@ logger = logging.getLogger()
 
 
 def go(args):
+    """
+    Execute the complete Random Forest training pipeline.
+    
+    This function orchestrates the entire training process including data loading,
+    preprocessing, feature engineering, model training, evaluation, and artifact
+    creation. It creates a comprehensive ML pipeline and trains a Random Forest
+    regressor for Airbnb rental price prediction.
+    
+    Training Process:
+    1. Load training/validation data from W&B artifact
+    2. Split data into train/validation sets with stratification
+    3. Create comprehensive preprocessing pipeline with:
+       - Categorical encoding (ordinal and one-hot)
+       - Text processing with TF-IDF vectorization
+       - Geographic coordinate imputation
+       - Date feature engineering
+    4. Train Random Forest model with specified hyperparameters
+    5. Evaluate model performance (R² and MAE)
+    6. Export model in MLflow format
+    7. Create feature importance visualization
+    8. Log results and artifacts to W&B
+    
+    Args:
+        args: argparse.Namespace containing:
+            - trainval_artifact (str): W&B artifact name for training data
+            - val_size (float): Fraction of data to use for validation
+            - random_seed (int): Random seed for reproducibility
+            - stratify_by (str): Column name for stratified splitting
+            - rf_config (str): Path to JSON file with Random Forest hyperparameters
+            - max_tfidf_features (int): Maximum number of TF-IDF features
+            - output_artifact (str): Name for the output model artifact
+    
+    Returns:
+        None: Results are logged to W&B and model is saved as artifact
+    
+    Raises:
+        Exception: If any step in the training process fails
+        
+    Side Effects:
+        - Creates 'random_forest_dir' directory with MLflow model
+        - Logs model artifact to W&B
+        - Logs feature importance plot to W&B
+        - Updates W&B run summary with performance metrics
+    """
 
     run = wandb.init(job_type="train_random_forest")
     run.config.update(args)
@@ -117,6 +177,25 @@ def go(args):
 
 
 def plot_feature_importance(pipe, feat_names):
+    """
+    Create a feature importance visualization for the trained Random Forest model.
+    
+    This function extracts feature importances from the trained Random Forest model
+    and creates a bar chart visualization. For NLP features (TF-IDF), it aggregates
+    all TF-IDF dimensions into a single importance score.
+    
+    Args:
+        pipe (sklearn.pipeline.Pipeline): The trained ML pipeline containing the Random Forest
+        feat_names (list): List of feature names corresponding to the model features
+        
+    Returns:
+        matplotlib.figure.Figure: Figure object containing the feature importance plot
+        
+    Note:
+        - Non-NLP features get individual importance scores
+        - NLP features (TF-IDF) are aggregated into a single importance score
+        - The plot shows features in the order they appear in the pipeline
+    """
     # We collect the feature importance for all non-nlp features first
     feat_imp = pipe["random_forest"].feature_importances_[: len(feat_names)-1]
     # For the NLP feature we sum across all the TF-IDF dimensions into a global
@@ -133,6 +212,50 @@ def plot_feature_importance(pipe, feat_names):
 
 
 def get_inference_pipeline(rf_config, max_tfidf_features):
+    """
+    Create a comprehensive ML preprocessing and inference pipeline.
+    
+    This function constructs a complete scikit-learn pipeline for Airbnb rental
+    price prediction. It includes comprehensive feature engineering, preprocessing,
+    and a Random Forest regressor for final prediction.
+    
+    Pipeline Components:
+    1. Categorical Encoding:
+       - Ordinal encoding for room_type (meaningful order)
+       - One-hot encoding for neighbourhood_group (no inherent order)
+    2. Numerical Feature Imputation:
+       - Zero imputation for missing numerical values
+    3. Date Feature Engineering:
+       - Days since last review calculation
+    4. Text Processing:
+       - TF-IDF vectorization of property names
+    5. Random Forest Regression:
+       - Final prediction model with configurable hyperparameters
+    
+    Args:
+        rf_config (dict): Random Forest hyperparameters including:
+            - n_estimators: Number of trees
+            - max_depth: Maximum tree depth
+            - min_samples_split: Minimum samples to split a node
+            - min_samples_leaf: Minimum samples in a leaf
+            - max_features: Number of features to consider for splits
+            - criterion: Splitting criterion
+            - random_state: Random seed for reproducibility
+        max_tfidf_features (int): Maximum number of TF-IDF features to extract
+    
+    Returns:
+        tuple: (sk_pipe, processed_features) where:
+            - sk_pipe (sklearn.pipeline.Pipeline): Complete ML pipeline
+            - processed_features (list): List of feature names in order
+    
+    Feature Engineering Details:
+        - Room types are encoded ordinally (Entire home/apt > Private room > Shared room)
+        - Neighborhood groups are one-hot encoded
+        - Missing numerical values are imputed with 0
+        - Missing review dates are imputed with '2010-01-01' (old date)
+        - Date features represent days since last review
+        - Property names are processed with TF-IDF (English stop words removed)
+    """
     # Let's handle the categorical features first
     # Ordinal categorical are categorical values for which the order is meaningful, for example
     # for room type: 'Entire home/apt' > 'Private room' > 'Shared room'

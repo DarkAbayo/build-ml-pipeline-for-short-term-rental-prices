@@ -1,6 +1,21 @@
 #!/usr/bin/env python
 """
-This step takes the best model, tagged with the "prod" tag, and tests it against the test dataset
+Model testing module for NYC Airbnb rental price prediction pipeline.
+
+This module tests the production-ready model (tagged with "prod") against the
+test dataset to evaluate final performance. It handles model loading, prediction,
+and performance metric calculation with comprehensive error handling for
+scikit-learn version compatibility issues.
+
+Key Features:
+- Loads production model from W&B artifacts
+- Performs inference on test dataset
+- Calculates performance metrics (R² and MAE)
+- Handles scikit-learn version compatibility issues
+- Logs results to W&B for tracking
+
+Author: Niedermeier Patrick
+Date: 2025-09-06
 """
 import argparse
 import logging
@@ -19,7 +34,23 @@ logger = logging.getLogger()
 
 def fix_column_transformer_compatibility(sk_pipe):
     """
-    Fix compatibility issues with ColumnTransformer between scikit-learn versions
+    Fix compatibility issues with ColumnTransformer between scikit-learn versions.
+    
+    This function addresses compatibility problems that arise when models trained
+    with one version of scikit-learn are loaded with a different version. The
+    main issue is the missing `_name_to_fitted_passthrough` attribute that was
+    removed in newer versions of scikit-learn.
+    
+    Args:
+        sk_pipe (sklearn.pipeline.Pipeline): The loaded ML pipeline containing a ColumnTransformer
+        
+    Returns:
+        None: Modifies the pipeline in-place
+        
+    Note:
+        This is a workaround for scikit-learn version compatibility issues.
+        The function safely handles cases where the attribute doesn't exist
+        or the pipeline structure is unexpected.
     """
     try:
         # Get the preprocessor step
@@ -36,6 +67,40 @@ def fix_column_transformer_compatibility(sk_pipe):
 
 
 def go(args):
+    """
+    Execute model testing against the test dataset.
+    
+    This function loads the production model (tagged with "prod"), performs
+    inference on the test dataset, and calculates performance metrics. It includes
+    comprehensive error handling for scikit-learn version compatibility issues
+    that may arise between different versions of the library.
+    
+    Testing Process:
+    1. Initialize W&B run for tracking
+    2. Download production model artifact from W&B
+    3. Download test dataset artifact from W&B
+    4. Load test data and separate features from target
+    5. Load MLflow model with compatibility fixes
+    6. Perform predictions on test data
+    7. Calculate performance metrics (R² and MAE)
+    8. Log results to W&B
+    
+    Args:
+        args: argparse.Namespace containing:
+            - mlflow_model (str): W&B artifact name for the production model (e.g., "random_forest_export:prod")
+            - test_dataset (str): W&B artifact name for the test dataset (e.g., "test_data.csv:latest")
+    
+    Returns:
+        None: Results are logged to W&B run summary
+    
+    Raises:
+        Exception: If model loading or prediction fails
+        
+    Compatibility Notes:
+        - Handles scikit-learn version differences between 1.3.2 and 1.7.0
+        - Fixes ColumnTransformer compatibility issues
+        - Suppresses sklearn warnings during model loading
+    """
 
     run = wandb.init(job_type="test_model")
     run.config.update(args)
