@@ -85,6 +85,12 @@ def go(args):
         logger.info("Converting last_review column to datetime")
         df['last_review'] = pd.to_datetime(df['last_review'])
 
+        # Apply geographical boundaries filter
+        logger.info("Applying geographical boundaries filter")
+        idx = df['longitude'].between(-74.25, -73.50) & df['latitude'].between(40.5, 41.2)
+        df = df[idx].copy()
+        logger.info("Data shape after geographical filtering: %s", df.shape)
+
         # Save cleaned data
         logger.info("Saving cleaned data")
         # "index=False" is important to avoid an extra index column in the output file
