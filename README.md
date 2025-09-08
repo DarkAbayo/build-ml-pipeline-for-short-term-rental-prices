@@ -265,12 +265,6 @@ prediction = response.json()['predicted_price']
 
 This project is licensed under the MIT License - see [LICENSE.txt](LICENSE.txt) for details.
 
-## 👨‍💻 Author
-
-**Dark Abayo**
-- GitHub: [@DarkAbayo](https://github.com/DarkAbayo)
-- W&B: [dark_pn-private](https://wandb.ai/dark_pn-private)
-
 ## 🤖 AI-Assisted Development
 
 **Development Note:** This project was developed using AI tools (e.g., code generation, documentation, suggestions), with human review and refinement applied throughout the development process. AI assistance served as a tool to accelerate development, while all critical decisions, code reviews, and final implementations were conducted by human developers.
